@@ -1,15 +1,37 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Next, Req, Res, HttpException } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { LoginUserDTO } from './dto/login-auth.dto';
+import { CreateUserDto } from 'src/user/dto/create-user.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+  @Post('register')
+  async registerUser(@Res() res, @Body() body: CreateUserDto, @Next() next) {
+    try {
+      const user = await this.authService.createUser(body);
+      return res.status(HttpStatus.CREATED).json({
+        statusCode: HttpStatus.CREATED,
+        data: user,
+        message: 'success',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-  @Post()
-  create(@Body() createAuthDto: CreateAuthDto) {
-    return this.authService.create(createAuthDto);
+  @Post('login')
+  async login(@Res() res, @Body() body: LoginUserDTO, @Next() next) {
+    try {
+      const user = await this.authService.login(body);
+      return res.status(HttpStatus.OK).json({
+        statusCode: HttpStatus.OK,
+        data: user,
+        message: 'success',
+      });
+    } catch (error) {
+      next(error);
+    }
   }
 
   @Get()
@@ -20,11 +42,6 @@ export class AuthController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.authService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
-    return this.authService.update(+id, updateAuthDto);
   }
 
   @Delete(':id')
