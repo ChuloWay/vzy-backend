@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
-import { User } from './schemas/user.schema';
+import { User, UserStatus } from './schemas/user.schema';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
@@ -67,7 +67,7 @@ export class UserService {
    * @return {Promise<User | null>} a promise that resolves to the updated user or null if not found
    */
 
-  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User | null> {
+  async updateUserProfile(id: string, updateUserDto: UpdateUserDto): Promise<User | null> {
     try {
       const { username, phoneNumber } = updateUserDto;
       const existingUser = await this.userModel.findById(id);
@@ -108,6 +108,24 @@ export class UserService {
     } catch (error) {
       console.error('An error occurred while updating the user:', error);
       throw error;
+    }
+  }
+  async updateUserStatus(userId: string, session: any): Promise<void> {
+    try {
+      // Find the user by ID within the transaction session
+      const user = await this.userModel.findById(userId, session);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Update the status field
+      user.status = UserStatus.PAID;
+
+      // Save the updated user within the transaction session
+      await user.save({ session });
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      throw new HttpException('Failed to update user status', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

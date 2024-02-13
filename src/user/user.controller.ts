@@ -30,7 +30,7 @@ export class UserController {
   async update(@Res() res, @Req() req, @Next() next, @Body() updateUserDto: UpdateUserDto) {
     try {
       const userObject = req.user;
-      const user = await this.userService.updateUser(userObject._id, updateUserDto);
+      const user = await this.userService.updateUserProfile(userObject._id, updateUserDto);
       return res.status(HttpStatus.OK).json({
         statusCode: HttpStatus.OK,
         data: user,

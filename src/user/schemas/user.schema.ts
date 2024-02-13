@@ -1,6 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { hash } from 'bcrypt';
+import { Payment } from 'src/payment/schemas/payment.schema';
+
+export enum UserStatus {
+  NOT_PAID = 'not_paid',
+  PAID = 'paid',
+}
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -21,6 +27,12 @@ export class User {
   @Prop({ required: true, minlength: 6 })
   password: string;
 
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Payment' }], default: [] })
+  payments: Payment[];
+
+  @Prop({ type: String, enum: UserStatus, default: UserStatus.NOT_PAID })
+  status: UserStatus;
+
   @Prop({ default: Date.now })
   createdAt: Date;
 
@@ -29,6 +41,11 @@ export class User {
 }
 
 const UserSchema = SchemaFactory.createForClass(User);
+
+UserSchema.pre<UserDocument>('findOneAndUpdate', function (next) {
+  this.set({ updatedAt: Date.now() });
+  next();
+});
 
 UserSchema.pre<User>('save', async function (next) {
   const user = this;
