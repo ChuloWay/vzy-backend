@@ -9,8 +9,8 @@ import { JwtAuthGuard } from 'src/auth/strategies/jwt-guard';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Get('/')
+  @UseGuards(JwtAuthGuard)
   async getProfile(@Res() res, @Req() req, @Next() next) {
     try {
       const userObject = req.user;
@@ -25,8 +25,8 @@ export class UserController {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
   @Patch('/')
+  @UseGuards(JwtAuthGuard)
   async update(@Res() res, @Req() req, @Next() next, @Body() updateUserDto: UpdateUserDto) {
     try {
       const userObject = req.user;

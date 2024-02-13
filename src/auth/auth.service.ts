@@ -42,7 +42,7 @@ export class AuthService {
     }
 
     const { _id, email } = user;
-    const data = { _id, email, appName:'vzy' };
+    const data = { _id, email, appName: 'vzy' };
 
     delete user.password;
 

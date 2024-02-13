@@ -70,19 +70,16 @@ export class UserService {
   async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User | null> {
     try {
       const { username, phoneNumber } = updateUserDto;
-        const existingUser = await this.userModel.findById(id);
+      const existingUser = await this.userModel.findById(id);
       if (!existingUser) {
         throw new HttpException('User not found', HttpStatus.NOT_FOUND);
       }
-  
+
       const query = {
-        $or: [
-          { username: username ?? existingUser.username },
-          { phoneNumber: phoneNumber ?? existingUser.phoneNumber }
-        ],
-        _id: { $ne: id }
+        $or: [{ username: username ?? existingUser.username }, { phoneNumber: phoneNumber ?? existingUser.phoneNumber }],
+        _id: { $ne: id },
       };
-  
+
       // Check for a user with conflicting username or phone number
       const conflictingUser = await this.userModel.findOne(query);
       if (conflictingUser) {
@@ -92,7 +89,7 @@ export class UserService {
           throw new HttpException('Another user already has that phone number', HttpStatus.BAD_REQUEST);
         }
       }
-  
+
       const updateFields: Partial<User> = {};
       if (username !== null && existingUser.username !== username) {
         updateFields.username = username;
@@ -100,22 +97,17 @@ export class UserService {
       if (phoneNumber !== undefined && existingUser.phoneNumber !== phoneNumber) {
         updateFields.phoneNumber = phoneNumber;
       }
-  
-      const updatedUser = await this.userModel.findByIdAndUpdate(
-        id,
-        updateFields,
-        { new: true }
-      );
-  
+
+      const updatedUser = await this.userModel.findByIdAndUpdate(id, updateFields, { new: true });
+
       if (!updatedUser) {
         throw new HttpException('User not found', HttpStatus.NOT_FOUND);
       }
-  
+
       return updatedUser;
     } catch (error) {
-      console.error("An error occurred while updating the user:", error);
+      console.error('An error occurred while updating the user:', error);
       throw error;
     }
   }
-  
 }

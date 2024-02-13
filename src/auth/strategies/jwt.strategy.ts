@@ -15,13 +15,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-
-   /**
+  /**
    * @description Validate the token and return the user
    * @param payload string
    * @returns User
    */
-   public async validate(payload: any): Promise<any> {
+  public async validate(payload: any): Promise<any> {
     let user: User;
 
     if (payload) {
@@ -32,7 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new HttpException('Invalid token', HttpStatus.UNAUTHORIZED);
     }
 
-    console.log("user here", user)
+    console.log('user here', user);
 
     return user;
   }

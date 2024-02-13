@@ -17,10 +17,7 @@ export class UtilityService {
     return hashSync(password, 11);
   }
 
-  public async comparePassword(
-    newPassword: string,
-    passwordHash: string,
-  ): Promise<boolean> {
+  public async comparePassword(newPassword: string, passwordHash: string): Promise<boolean> {
     try {
       return await compareSync(newPassword, passwordHash);
     } catch (error) {

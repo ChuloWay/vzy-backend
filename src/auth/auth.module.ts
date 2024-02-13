@@ -18,18 +18,17 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         privateKey: configService.get<string>('PRIVATE_KEY'),
         publicKey: configService.get<string>('PUBLIC_KEY'),
         signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRES_IN'),//1 hour
+          expiresIn: configService.get<string>('JWT_EXPIRES_IN'), //1 minute
           algorithm: 'RS256',
         },
       }),
       inject: [ConfigService],
     }),
     ConfigModule.forRoot(),
-    UserModule
+    UserModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtAuthService, UtilityService, JwtStrategy],
   exports: [AuthService],
-
 })
 export class AuthModule {}
