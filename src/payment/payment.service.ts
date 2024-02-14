@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Inject, Injectable, RawBodyRequest } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable, RawBodyRequest, Logger } from '@nestjs/common';
 import { CURRENCY, FEE_AMOUNT, FEE_TYPE, STRIPE_CLIENT } from 'src/stripe/constants';
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
@@ -8,9 +8,9 @@ import { Model } from 'mongoose';
 import { UserService } from 'src/user/user.service';
 import { PaymentStatus } from './enum/enum.index';
 import { PaymentError } from 'src/utils/AppError';
-
 @Injectable()
 export class PaymentService {
+  private logger = new Logger(PaymentService.name);
   constructor(
     @InjectModel(Payment.name) private readonly paymentModel: Model<Payment>,
     @Inject(STRIPE_CLIENT) private stripe: Stripe,
@@ -24,7 +24,6 @@ export class PaymentService {
    * @return {Promise<any>} the created checkout session
    */
   async createCheckoutSession(user: any): Promise<any> {
-    console.log('userobject here:', user);
     const userId = user._id.toString();
     try {
       const session = await this.stripe.checkout.sessions.create({
@@ -77,10 +76,12 @@ export class PaymentService {
       // Handle the event based on its type
       switch (event.type) {
         case 'payment_intent.succeeded':
-          // Log event data
+          this.logger.log('Payment intent succeeded');
           break;
 
         case 'checkout.session.completed':
+          this.logger.log('Payment checkout session completed');
+
           // Handle completed checkout session event
           const session = event.data.object;
 
@@ -92,16 +93,16 @@ export class PaymentService {
 
         case 'payment_intent.payment_failed':
           // Log event data
-          console.log('Event data for payment_intent.payment_failed:', event.data);
-
+          this.logger.error('Payment intent failed');
           break;
 
         case 'checkout.session.async_payment_failed':
-          //TODO Handle failed checkout session event
-          const paymentInfo = event.data.object;
+          // Handle failed checkout session event
+          this.logger.error('Async payment failed');
+          const failedSession = event.data.object;
 
-          // await this.handlePaymentFailure(failedPaymentInfo);
-
+          // Perform actions to handle failed payment for the session
+          await this.handlePaymentFailure(failedSession);
           break;
 
         default:
@@ -110,7 +111,7 @@ export class PaymentService {
 
       return { received: true };
     } catch (error) {
-      console.error('Error handling Stripe webhook event:', error);
+      this.logger.error('Error handling Stripe webhook event:', error);
       throw new HttpException('Failed to handle Stripe webhook event', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -170,6 +171,46 @@ export class PaymentService {
       await session.abortTransaction();
       session.endSession();
       throw new PaymentError('Failed to handle payment success', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  private async handlePaymentFailure(data: any): Promise<void> {
+    const session = await this.paymentModel.startSession();
+    session.startTransaction();
+
+    try {
+      const userId = data?.metadata?.userId;
+      const userEmail = data?.customer_details?.email;
+
+      if (!userId || !userEmail) {
+        throw new Error('Missing userId or userEmail in payment data');
+      }
+
+      const user = await this.userService.findUserByEmail(userEmail);
+
+      if (!user || user._id.toString() !== userId) {
+        throw new Error('Provided userId and userEmail do not belong to the same user');
+      }
+
+      const stripeSessionId = data.id;
+      const amount = data.amount_total;
+      const status = PaymentStatus.Failed;
+
+      const payment = new this.paymentModel({
+        user: user._id,
+        stripeSessionId,
+        amount,
+        status,
+      });
+
+      await payment.save({ session });
+
+      await session.commitTransaction();
+      session.endSession();
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw new PaymentError('Failed to handle payment failure', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

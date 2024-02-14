@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, Model } from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -10,6 +10,8 @@ import { UserUpdateError } from '../utils/AppError';
 
 @Injectable()
 export class UserService {
+  private logger = new Logger(UserService.name);
+
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   /**
