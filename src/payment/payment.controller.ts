@@ -19,7 +19,7 @@ import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { CURRENCY, FEE_AMOUNT, FEE_TYPE, STRIPE_CLIENT } from 'src/stripe/constants';
 import Stripe from 'stripe';
-import { JwtAuthGuard } from 'src/auth/strategies/jwt-guard';
+import { JwtAuthGuard } from 'src/auth/jwt/jwt-guard';
 
 @Controller('payment')
 export class PaymentController {

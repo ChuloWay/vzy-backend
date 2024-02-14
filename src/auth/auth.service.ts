@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { LoginUserDTO } from './dto/login-auth.dto';
-import { JwtAuthService } from './jwt.service';
+import { JwtAuthService } from './jwt/jwt.service';
 import { UserService } from 'src/user/user.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { UtilityService } from 'src/utils/utilityService';
@@ -20,19 +20,27 @@ export class AuthService {
    * @return {Promise} a promise that resolves with the created user
    */
   async createUser(createUserDTO: CreateUserDto) {
-    const { email, phoneNumber } = createUserDTO;
+    try {
+        const { email, phoneNumber } = createUserDTO;
 
-    const checkEmail = await this.userService.findUserByEmail(email);
-    if (checkEmail) {
-      throw new HttpException('An account with this email address already exists.', HttpStatus.BAD_REQUEST);
-    }
-    const checkNumber = await this.userService.findUserByPhoneNumber(phoneNumber);
-    if (checkNumber) {
-      throw new HttpException('An account with this phoneNumber address already exists.', HttpStatus.BAD_REQUEST);
-    }
+        // Check if email already exists
+        const existingEmailUser = await this.userService.findUserByEmail(email);
+        if (existingEmailUser) {
+            throw new HttpException('An account with this email address already exists.', HttpStatus.BAD_REQUEST);
+        }
 
-    return await this.userService.create(createUserDTO);
-  }
+        // Check if phone number already exists
+        const existingPhoneNumberUser = await this.userService.findUserByPhoneNumber(phoneNumber);
+        if (existingPhoneNumberUser) {
+            throw new HttpException('An account with this phone number already exists.', HttpStatus.BAD_REQUEST);
+        }
+
+        return await this.userService.create(createUserDTO);
+    } catch (error) {
+        throw new HttpException('Failed to create user', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}
+
 
   /**
    * Perform user login and return user information and a token.
@@ -41,24 +49,23 @@ export class AuthService {
    * @return {object} an object containing user information and a token
    */
   async login(loginUserDTO: LoginUserDTO) {
-    // Get user information
-    const user = await this.userService.findUserByEmail(loginUserDTO.email);
-    // Check if user exists
-    if (!user) {
-      throw new NotFoundException('Email does not exist');
+    try {
+      // Get user information
+      const user = await this.userService.findUserByEmail(loginUserDTO.email);
+
+      // Check if user exists and compare passwords
+      if (!user || !(await this.utilityService.comparePassword(loginUserDTO.password, user.password))) {
+        throw new UnauthorizedException('Invalid email or password');
+      }
+
+      const { _id, email } = user;
+
+      // Create token
+      const token = this.jwtAuthService.createToken({ _id, email });
+
+      return { user, token };
+    } catch (error) {
+      throw new HttpException('Login failed', HttpStatus.INTERNAL_SERVER_ERROR);
     }
-
-    const isValid = await this.utilityService.comparePassword(loginUserDTO.password, user.password);
-    if (!isValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const { _id, email } = user;
-    const data = { _id, email, appName: 'vzy' };
-
-    delete user.password;
-
-    const token = this.jwtAuthService.createToken(data);
-    return { user, token };
   }
 }

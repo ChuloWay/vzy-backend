@@ -109,11 +109,11 @@ export class PaymentService {
 
       return { received: true };
     } catch (error) {
-      // Log and handle errors
       console.error('Error handling Stripe webhook event:', error);
       throw new HttpException('Failed to handle Stripe webhook event', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
   /**
    * Retrieves payment information for a given session ID.
    *
@@ -135,21 +135,23 @@ export class PaymentService {
     session.startTransaction();
 
     try {
-      // Extract relevant information from the payment object
-      const userId = data.metadata.userId;
-      const stripeSessionId = data.id;
-      const amount = data.amount_total;
-      const status = PaymentStatus.Succeeded;
+      const userId = data?.metadata?.userId;
       const userEmail = data?.customer_details?.email;
 
-      // Check if user exists
+      if (!userId || !userEmail) {
+        throw new Error('Missing userId or userEmail in payment data');
+      }
+
       const user = await this.userService.findUserByEmail(userEmail);
 
       if (!user || user._id.toString() !== userId) {
         throw new Error('Provided userId and userEmail do not belong to the same user');
       }
 
-      // Create a new Payment record
+      const stripeSessionId = data.id;
+      const amount = data.amount_total;
+      const status = PaymentStatus.Succeeded;
+
       const payment = new this.paymentModel({
         user: user._id,
         stripeSessionId,
@@ -157,10 +159,8 @@ export class PaymentService {
         status,
       });
 
-      // Save the payment record
       await payment.save({ session });
 
-      // Update user status to "paid"
       await this.userService.updateUserStatus(user._id, payment, session);
 
       await session.commitTransaction();
@@ -168,8 +168,7 @@ export class PaymentService {
     } catch (error) {
       await session.abortTransaction();
       session.endSession();
-      console.error('Error handling payment success:', error);
-      throw new HttpException('Failed to handle payment success', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new PaymentError('Failed to handle payment success', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

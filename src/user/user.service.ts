@@ -109,10 +109,19 @@ export class UserService {
 
       return updatedUser;
     } catch (error) {
-      console.error('An error occurred while updating the user:', error);
-      throw error;
+      throw new UserUpdateError('An error occurred while updating the user', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+  
+  /**
+   * Updates the user status and adds a payment to the user's list of payments.
+   *
+   * @param {any} userId - The user ID.
+   * @param {Payment} payment - The payment to be added.
+   * @param {ClientSession} session - The MongoDB client session.
+   * @return {Promise<void>} A promise that resolves with no value upon successful update.
+   */
   async updateUserStatus(userId: any, payment: Payment, session: ClientSession): Promise<void> {
     try {
       await this.userModel.findOneAndUpdate(
@@ -121,8 +130,7 @@ export class UserService {
         { session },
       );
     } catch (error) {
-      console.error('Error updating user status:', error);
-      throw new HttpException('Failed to update user status', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new UserUpdateError('Failed to update user status', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }
