@@ -18,6 +18,8 @@ export class PaymentService {
     private readonly userService: UserService,
   ) {}
   async createCheckoutSession(user: any): Promise<any> {
+    console.log('userobject here:', user);
+    const userId = user._id.toString();
     try {
       const session = await this.stripe.checkout.sessions.create({
         line_items: [
@@ -36,6 +38,9 @@ export class PaymentService {
         success_url: this.configService.get<string>('SUCCESS_URL'),
         cancel_url: this.configService.get<string>('CANCEL_URL'),
         customer_email: user.email,
+        metadata: {
+          userId,
+        },
       });
 
       return session;
@@ -43,7 +48,7 @@ export class PaymentService {
       throw new HttpException('Failed to create Stripe Checkout session', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
- 
+
   async handleStripeWebhook(req: RawBodyRequest<Request>): Promise<any> {
     try {
       // Retrieve the Stripe webhook secret from your environment or configuration
@@ -65,19 +70,38 @@ export class PaymentService {
       // Handle the event based on its type
       switch (event.type) {
         case 'payment_intent.succeeded':
-          // Handle successful payment intent event
-          // await this.handlePaymentSuccess(event.data.object);
+          // Log event data
           break;
+
+        case 'checkout.session.completed':
+          // Handle completed checkout session event
+          const session = event.data.object;
+
+          const paymentInfowithMetadata = await this.retrievePaymentInfo(session.id);
+
+          await this.handlePaymentSuccess(paymentInfowithMetadata);
+
+          break;
+
         case 'payment_intent.payment_failed':
-          // Handle failed payment intent event
+          // Log event data
+          console.log('Event data for payment_intent.payment_failed:', event.data);
+
           break;
         // Add more cases for other webhook event types as needed
         default:
           // Log unknown event types
           console.log(`Unhandled event type: ${event.type}`);
+
+        case 'checkout.session.async_payment_failed':
+          //TODO Handle failed checkout session event
+          const paymentInfo = event.data.object;
+
+          // await this.handlePaymentFailure(failedPaymentInfo);
+
+          break;
       }
 
-      // Respond with 200 OK to acknowledge receipt of the event
       return { received: true };
     } catch (error) {
       // Log and handle errors
@@ -85,30 +109,42 @@ export class PaymentService {
       throw new HttpException('Failed to handle Stripe webhook event', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-  async handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent): Promise<void> {
+  async retrievePaymentInfo(sessionId: string) {
+    return await this.stripe.checkout.sessions.retrieve(sessionId);
+  }
+
+  async handlePaymentSuccess(data: any): Promise<void> {
     const session = await this.paymentModel.startSession();
     session.startTransaction();
 
     try {
-      // Extract relevant information from the payment intent
-      const userId = paymentIntent.metadata.userId; // Assuming you're passing user ID as metadata
-      const stripeId = paymentIntent.id;
-      const amount = paymentIntent.amount;
+      // Extract relevant information from the payment object
+      const userId = data.metadata.userId;
+      const stripeSessionId = data.id;
+      const amount = data.amount_total;
       const status = PaymentStatus.Succeeded;
+      const userEmail = data.customer_details.email;
+
+      // Check
+      const user = await this.userService.findUserByEmail(userEmail);
+
+      if (!user && user._id.toString() !== userId) {
+        throw new Error('Provided userId and userEmail do not belong to the same user');
+      }
 
       // Create a new Payment record
       const payment = new this.paymentModel({
-        user: userId,
-        stripeId,
+        user,
+        stripeSessionId,
         amount,
         status,
       });
 
       // Save the payment record
       await payment.save({ session });
-
+      console.log('did it reach here?');
       // Update user status to "paid"
-      await this.userService.updateUserStatus(userId, session);
+      await this.userService.updateUserStatus(user._id, session);
 
       await session.commitTransaction();
       session.endSession();

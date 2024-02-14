@@ -110,19 +110,11 @@ export class UserService {
       throw error;
     }
   }
-  async updateUserStatus(userId: string, session: any): Promise<void> {
+  async updateUserStatus(userId: any, session: any): Promise<void> {
     try {
-      // Find the user by ID within the transaction session
-      const user = await this.userModel.findById(userId, session);
-      if (!user) {
-        throw new Error('User not found');
-      }
-
+      console.log('did it enter here');
       // Update the status field
-      user.status = UserStatus.PAID;
-
-      // Save the updated user within the transaction session
-      await user.save({ session });
+      await this.userModel.findOneAndUpdate({ _id: userId }, { $set: { status: UserStatus.PAID } }, { session });
     } catch (error) {
       console.error('Error updating user status:', error);
       throw new HttpException('Failed to update user status', HttpStatus.INTERNAL_SERVER_ERROR);

@@ -10,7 +10,6 @@ export enum PaymentStatus {
 
 export type PaymentDocument = HydratedDocument<Payment>;
 
-
 @Schema()
 export class Payment {
   @Prop({ default: () => new Types.ObjectId() })
@@ -20,7 +19,7 @@ export class Payment {
   user: User;
 
   @Prop({ required: true })
-  stripeId: string;
+  stripeSessionId: string;
 
   @Prop({ required: true })
   amount: number;
