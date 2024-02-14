@@ -1,73 +1,71 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Vzy Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## API Documentation
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Explore the API documentation at - [API Postman Documentation](https://documenter.getpostman.com/view/24154143/2sA2r55RxV).
 
-## Description
+## Technologies Used
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- MongoDB Atlas
+- NestJS Framework
+- Mongoose
+- Stripe
 
-## Installation
+## Features
 
-```bash
-$ npm install
-```
+1. **User Registration, Authorization, and Profile Update with JWT Token:**
 
-## Running the app
+   - Users can register for an account, authenticate using JWT tokens.
+   - Users can update their information as needed.
 
-```bash
-# development
-$ npm run start
+2. **User Payment/Verification with Stripe Integration:**
+   - Users can make payments through Stripe integration.
+   - The application verifies successful payment events from Stripe.
+   - Upon completion of a payment, the user's status is updated in the database.
 
-# watch mode
-$ npm run start:dev
+## Getting Started
 
-# production mode
-$ npm run start:prod
-```
+### Prerequisites
 
-## Test
+Ensure the following are installed locally:
+1. [Git](https://git-scm.com)
+2. [Node.js](https://nodejs.org/)
+3. [NPM](https://www.npmjs.com/)
 
-```bash
-# unit tests
-$ npm run test
+## Implementation Details
 
-# e2e tests
-$ npm run test:e2e
+The project is implemented using NodeJS, NestJs, TypeScript, and Mongoose for database interactions. The chosen database is MongoDB Atlas.
 
-# test coverage
-$ npm run test:cov
-```
+### Setup Steps
 
-## Support
+1. **Clone the repo:**
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+   ```bash
+   git clone https://github.com/ChuloWay/vzy-backend
+   ```
 
-## Stay in touch
+2. **Install dependencies:**
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+   ```bash
+   npm install
+   ```
 
-## License
+3. **Create an env file:**
 
-Nest is [MIT licensed](LICENSE).
+   - Duplicate the `.env.example` file in the project root.
+   - Rename the duplicated file to `.env`.
+   - Open the `.env` file and set your variables as shown in the example file.
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Ensure to fill in the necessary values in the `.env` file for a smooth configuration.
+
+4. **Start your server:**
+
+   ```bash
+   npm run start:dev
+   ```
+
+### 🚀 Thank you for exploring the Vzy Backend! Happy coding!

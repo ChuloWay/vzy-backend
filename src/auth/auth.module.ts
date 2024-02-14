@@ -18,7 +18,7 @@ import { JwtStrategy } from './jwt/jwt.strategy';
         privateKey: configService.get<string>('PRIVATE_KEY'),
         publicKey: configService.get<string>('PUBLIC_KEY'),
         signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRES_IN'), //1 minute
+          expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '60', //1 minute
           algorithm: 'RS256',
         },
       }),
