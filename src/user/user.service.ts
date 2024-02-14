@@ -1,9 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { ClientSession, Model } from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
-import { User, UserStatus } from './schemas/user.schema';
+import { User } from './schemas/user.schema';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Payment } from 'src/payment/schemas/payment.schema';
+import { UserStatus } from './enum/enum.index';
 
 @Injectable()
 export class UserService {
@@ -27,7 +29,7 @@ export class UserService {
    * @return {Promise<User | null>} a promise that resolves to the found user or null if not found
    */
   async findUserById(id: string): Promise<User | null> {
-    return this.userModel.findById(id).exec();
+    return this.userModel.findById(id).select('-password -__v').exec();
   }
 
   /**
@@ -37,8 +39,9 @@ export class UserService {
    * @return {Promise<User | null>} a promise that resolves to the found user or null if not found
    */
   async findUserByEmail(email: string): Promise<User | null> {
-    return this.userModel.findOne({ email }).exec();
-  }
+    return this.userModel.findOne({ email }).select('-password -__v').exec();
+}
+
 
   /**
    * Finds a user by phone number.
@@ -47,7 +50,7 @@ export class UserService {
    * @return {Promise<User | null>} a promise that resolves to the found user or null if not found
    */
   async findUserByPhoneNumber(phoneNumber: string): Promise<User | null> {
-    return this.userModel.findOne({ phoneNumber }).exec();
+    return this.userModel.findOne({ phoneNumber }).select('-password -__v').exec();
   }
 
   /**
@@ -56,7 +59,7 @@ export class UserService {
    * @return {Promise<User[]>} a promise that resolves to an array of all users
    */
   async findAllUsers(): Promise<User[]> {
-    return this.userModel.find().exec();
+    return this.userModel.find().select('-password -__v').exec();
   }
 
   /**
@@ -110,11 +113,13 @@ export class UserService {
       throw error;
     }
   }
-  async updateUserStatus(userId: any, session: any): Promise<void> {
+  async updateUserStatus(userId: any, payment: Payment, session: ClientSession): Promise<void> {
     try {
-      console.log('did it enter here');
-      // Update the status field
-      await this.userModel.findOneAndUpdate({ _id: userId }, { $set: { status: UserStatus.PAID } }, { session });
+      await this.userModel.findOneAndUpdate(
+        { _id: userId },
+        { $set: { status: UserStatus.PAID }, $push: { payments: payment } },
+        { session },
+      );
     } catch (error) {
       console.error('Error updating user status:', error);
       throw new HttpException('Failed to update user status', HttpStatus.INTERNAL_SERVER_ERROR);

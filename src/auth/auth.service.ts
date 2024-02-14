@@ -13,6 +13,12 @@ export class AuthService {
     private readonly utilityService: UtilityService,
   ) {}
 
+  /**
+   * A method to create a new user.
+   *
+   * @param {CreateUserDto} createUserDTO - the DTO containing user information
+   * @return {Promise} a promise that resolves with the created user
+   */
   async createUser(createUserDTO: CreateUserDto) {
     const { email, phoneNumber } = createUserDTO;
 
@@ -28,6 +34,12 @@ export class AuthService {
     return await this.userService.create(createUserDTO);
   }
 
+  /**
+   * Perform user login and return user information and a token.
+   *
+   * @param {LoginUserDTO} loginUserDTO - the DTO containing user login information
+   * @return {object} an object containing user information and a token
+   */
   async login(loginUserDTO: LoginUserDTO) {
     // Get user information
     const user = await this.userService.findUserByEmail(loginUserDTO.email);
@@ -48,16 +60,5 @@ export class AuthService {
 
     const token = this.jwtAuthService.createToken(data);
     return { user, token };
-  }
-  findAll() {
-    return 'This action returns all auth';
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
   }
 }

@@ -2,11 +2,9 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { hash } from 'bcrypt';
 import { Payment } from 'src/payment/schemas/payment.schema';
+import { UserStatus } from '../enum/enum.index';
 
-export enum UserStatus {
-  NOT_PAID = 'not_paid',
-  PAID = 'paid',
-}
+
 
 export type UserDocument = HydratedDocument<User>;
 

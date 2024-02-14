@@ -1,12 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import { User } from 'src/user/schemas/user.schema';
-
-export enum PaymentStatus {
-  Pending = 'pending',
-  Succeeded = 'succeeded',
-  Failed = 'failed',
-}
+import { PaymentStatus } from '../enum/enum.index';
 
 export type PaymentDocument = HydratedDocument<Payment>;
 
@@ -15,8 +9,8 @@ export class Payment {
   @Prop({ default: () => new Types.ObjectId() })
   _id: Types.ObjectId;
 
-  @Prop({ required: true })
-  user: User;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  user: Types.ObjectId;
 
   @Prop({ required: true })
   stripeSessionId: string;

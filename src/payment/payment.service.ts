@@ -1,13 +1,12 @@
 import { HttpException, HttpStatus, Inject, Injectable, RawBodyRequest } from '@nestjs/common';
-import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { CURRENCY, FEE_AMOUNT, FEE_TYPE, STRIPE_CLIENT } from 'src/stripe/constants';
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
-import { Payment, PaymentDocument, PaymentStatus } from './schemas/payment.schema';
+import { Payment } from './schemas/payment.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserService } from 'src/user/user.service';
+import { PaymentStatus } from './enum/enum.index';
 
 @Injectable()
 export class PaymentService {
@@ -17,6 +16,12 @@ export class PaymentService {
     private readonly configService: ConfigService,
     private readonly userService: UserService,
   ) {}
+  /**
+   * Create a new checkout session for the user.
+   *
+   * @param {any} user - the user object
+   * @return {Promise<any>} the created checkout session
+   */
   async createCheckoutSession(user: any): Promise<any> {
     console.log('userobject here:', user);
     const userId = user._id.toString();
@@ -49,6 +54,12 @@ export class PaymentService {
     }
   }
 
+  /**
+   * Stripe Webhook handler.
+   *
+   * @param {RawBodyRequest<Request>} req - the request object
+   * @return {Promise<any>} the result of the function
+   */
   async handleStripeWebhook(req: RawBodyRequest<Request>): Promise<any> {
     try {
       // Retrieve the Stripe webhook secret from your environment or configuration
@@ -57,15 +68,10 @@ export class PaymentService {
       // Retrieve the Stripe signature header from the request headers
       const stripeSignature = req.headers['stripe-signature'];
 
-      // Get the raw request body as a Buffer
       const rawBody = req.rawBody;
 
       // Verify the Stripe webhook event
-      const event = this.stripe.webhooks.constructEvent(
-        rawBody, // Raw body of the request
-        stripeSignature, // Stripe signature header
-        stripeWebhookSecret,
-      );
+      const event = this.stripe.webhooks.constructEvent(rawBody, stripeSignature, stripeWebhookSecret);
 
       // Handle the event based on its type
       switch (event.type) {
@@ -88,10 +94,6 @@ export class PaymentService {
           console.log('Event data for payment_intent.payment_failed:', event.data);
 
           break;
-        // Add more cases for other webhook event types as needed
-        default:
-          // Log unknown event types
-          console.log(`Unhandled event type: ${event.type}`);
 
         case 'checkout.session.async_payment_failed':
           //TODO Handle failed checkout session event
@@ -100,6 +102,9 @@ export class PaymentService {
           // await this.handlePaymentFailure(failedPaymentInfo);
 
           break;
+
+        default:
+          console.log(`Unhandled event type: ${event.type}`);
       }
 
       return { received: true };
@@ -109,11 +114,23 @@ export class PaymentService {
       throw new HttpException('Failed to handle Stripe webhook event', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-  async retrievePaymentInfo(sessionId: string) {
+  /**
+   * Retrieves payment information for a given session ID.
+   *
+   * @param {string} sessionId - The session ID for which payment information is to be retrieved
+   * @return {Promise<any>} A Promise that resolves to the retrieved payment information
+   */
+  private async retrievePaymentInfo(sessionId: string) {
     return await this.stripe.checkout.sessions.retrieve(sessionId);
   }
 
-  async handlePaymentSuccess(data: any): Promise<void> {
+  /**
+   * Handle the success of a payment by processing the payment data and updating the user and payment records accordingly.
+   *
+   * @param {any} data - the payment data received
+   * @return {Promise<void>} a promise that resolves when the payment success handling is complete
+   */
+  private async handlePaymentSuccess(data: any): Promise<void> {
     const session = await this.paymentModel.startSession();
     session.startTransaction();
 
@@ -123,18 +140,18 @@ export class PaymentService {
       const stripeSessionId = data.id;
       const amount = data.amount_total;
       const status = PaymentStatus.Succeeded;
-      const userEmail = data.customer_details.email;
+      const userEmail = data?.customer_details?.email;
 
-      // Check
+      // Check if user exists
       const user = await this.userService.findUserByEmail(userEmail);
 
-      if (!user && user._id.toString() !== userId) {
+      if (!user || user._id.toString() !== userId) {
         throw new Error('Provided userId and userEmail do not belong to the same user');
       }
 
       // Create a new Payment record
       const payment = new this.paymentModel({
-        user,
+        user: user._id,
         stripeSessionId,
         amount,
         status,
@@ -142,9 +159,9 @@ export class PaymentService {
 
       // Save the payment record
       await payment.save({ session });
-      console.log('did it reach here?');
+
       // Update user status to "paid"
-      await this.userService.updateUserStatus(user._id, session);
+      await this.userService.updateUserStatus(user._id, payment, session);
 
       await session.commitTransaction();
       session.endSession();
