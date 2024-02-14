@@ -21,26 +21,26 @@ export class AuthService {
    */
   async createUser(createUserDTO: CreateUserDto) {
     try {
-        const { email, phoneNumber } = createUserDTO;
+      const { email, phoneNumber } = createUserDTO;
 
-        // Check if email already exists
-        const existingEmailUser = await this.userService.findUserByEmail(email);
-        if (existingEmailUser) {
-            throw new HttpException('An account with this email address already exists.', HttpStatus.BAD_REQUEST);
-        }
+      // Check if email already exists
+      const existingEmailUser = await this.userService.findUserByEmail(email);
+      if (existingEmailUser) {
+        throw new HttpException('An account with this email address already exists.', HttpStatus.BAD_REQUEST);
+      }
 
-        // Check if phone number already exists
-        const existingPhoneNumberUser = await this.userService.findUserByPhoneNumber(phoneNumber);
-        if (existingPhoneNumberUser) {
-            throw new HttpException('An account with this phone number already exists.', HttpStatus.BAD_REQUEST);
-        }
+      // Check if phone number already exists
+      const existingPhoneNumberUser = await this.userService.findUserByPhoneNumber(phoneNumber);
+      if (existingPhoneNumberUser) {
+        throw new HttpException('An account with this phone number already exists.', HttpStatus.BAD_REQUEST);
+      }
 
-        return await this.userService.create(createUserDTO);
+      return await this.userService.create(createUserDTO);
     } catch (error) {
-        throw new HttpException('Failed to create user', HttpStatus.INTERNAL_SERVER_ERROR);
+      console.error(error);
+      throw error;
     }
-}
-
+  }
 
   /**
    * Perform user login and return user information and a token.
@@ -65,7 +65,8 @@ export class AuthService {
 
       return { user, token };
     } catch (error) {
-      throw new HttpException('Login failed', HttpStatus.INTERNAL_SERVER_ERROR);
+      console.error(error);
+      throw error;
     }
   }
 }

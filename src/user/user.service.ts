@@ -6,6 +6,7 @@ import { User } from './schemas/user.schema';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Payment } from 'src/payment/schemas/payment.schema';
 import { UserStatus } from './enum/enum.index';
+import { UserUpdateError } from '../utils/AppError';
 
 @Injectable()
 export class UserService {
@@ -39,7 +40,7 @@ export class UserService {
    * @return {Promise<User | null>} a promise that resolves to the found user or null if not found
    */
   async findUserByEmail(email: string): Promise<User | null> {
-    return this.userModel.findOne({ email }).select('-password -__v').exec();
+    return this.userModel.findOne({ email }).exec();
 }
 
 
@@ -72,6 +73,9 @@ export class UserService {
 
   async updateUserProfile(id: string, updateUserDto: UpdateUserDto): Promise<User | null> {
     try {
+      if (!updateUserDto || Object.keys(updateUserDto).length === 0) {
+        throw new HttpException('Empty payload', HttpStatus.BAD_REQUEST);
+      }
       const { username, phoneNumber } = updateUserDto;
       const existingUser = await this.userModel.findById(id);
       if (!existingUser) {
@@ -109,11 +113,14 @@ export class UserService {
 
       return updatedUser;
     } catch (error) {
-      throw new UserUpdateError('An error occurred while updating the user', HttpStatus.INTERNAL_SERVER_ERROR);
+      if (error instanceof HttpException) {
+        throw error;
+      } else {
+        throw new UserUpdateError('An error occurred while updating the user', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
-  }
+}
 
-  
   /**
    * Updates the user status and adds a payment to the user's list of payments.
    *

@@ -7,6 +7,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserService } from 'src/user/user.service';
 import { PaymentStatus } from './enum/enum.index';
+import { PaymentError } from 'src/utils/AppError';
 
 @Injectable()
 export class PaymentService {
