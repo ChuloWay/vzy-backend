@@ -2,10 +2,10 @@ import { Transform } from 'class-transformer';
 import { IsEmail, IsNotEmpty, IsString, Matches } from 'class-validator';
 
 export class CreateUserDto {
-  @IsNotEmpty({ message: 'First Name is required' })
+  @IsNotEmpty({ message: 'username is required' })
   @IsString()
   @Matches(/^[a-zA-Z]+$/, {
-    message: 'First Name can only contain letters',
+    message: 'username can only contain letters',
   })
   username: string;
 
@@ -19,14 +19,14 @@ export class CreateUserDto {
 
   @IsNotEmpty({ message: 'Phone Number is required' })
   @Matches(/^(?:\+234|234|0)(?:\d{10})$/, {
-    message: 'Invalid phone number format',
+    message: 'Invalid phone number format, use +234XXXXXXXXXX or 0XXXXXXXXXX',
   })
   phoneNumber: string;
 
   @IsNotEmpty({ message: 'Password is required' })
   @IsString()
   @Matches(/^(?=.*[A-Z])(?=.*\d)(?=.*\W).{8,30}$/, {
-    message: 'Invalid password format',
+    message: 'Invalid password format,  use 8-30 characters with at least one uppercase letter, one number and one special character',
   })
   password: string;
 }

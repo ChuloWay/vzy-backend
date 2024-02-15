@@ -8,11 +8,14 @@ import * as morgan from 'morgan';
 dotenv.config();
 async function bootstrap() {
   const logger = new Logger('Main');
+
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api/v1');
   app.use(morgan('tiny'));
+
   const configService = app.get(ConfigService);
   app.useGlobalPipes(new ValidationPipe());
+  
   app.use(
     bodyParser.json({
       verify: (req, res, buffer) => (req['rawBody'] = buffer),

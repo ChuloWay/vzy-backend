@@ -8,6 +8,8 @@ import { Model } from 'mongoose';
 import { UserService } from 'src/user/user.service';
 import { PaymentStatus } from './enum/enum.index';
 import { PaymentError } from 'src/utils/AppError';
+
+
 @Injectable()
 export class PaymentService {
   private logger = new Logger(PaymentService.name);
@@ -17,6 +19,8 @@ export class PaymentService {
     private readonly configService: ConfigService,
     private readonly userService: UserService,
   ) {}
+
+
   /**
    * Create a new checkout session for the user.
    *
