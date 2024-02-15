@@ -8,18 +8,15 @@ import { UserModule } from 'src/user/user.module';
 import { JwtAuthService } from './jwt/jwt.service';
 import { UtilityService } from 'src/utils/utilityService';
 import { JwtStrategy } from './jwt/jwt.strategy';
-
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt', property: 'user', session: false }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        privateKey: configService.get<string>('PRIVATE_KEY'),
-        publicKey: configService.get<string>('PUBLIC_KEY'),
+        secret: configService.get<string>('JWT_SECRET'), 
         signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '60', //1 minute
-          algorithm: 'RS256',
+          expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '60', // 1 minute
         },
       }),
       inject: [ConfigService],
@@ -32,3 +29,4 @@ import { JwtStrategy } from './jwt/jwt.strategy';
   exports: [AuthService],
 })
 export class AuthModule {}
+
