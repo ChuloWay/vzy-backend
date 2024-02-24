@@ -34,7 +34,7 @@ export class User {
   @Prop({ default: Date.now })
   createdAt: Date;
 
-  @Prop({ default: Date.now })
+  @Prop({ default: Date.now})
   updatedAt: Date;
 }
 

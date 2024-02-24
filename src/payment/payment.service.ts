@@ -86,12 +86,7 @@ export class PaymentService {
         case 'checkout.session.completed':
           this.logger.log('Payment checkout session completed');
 
-          // Handle completed checkout session event
-          const session = event.data.object;
-
-          const paymentInfowithMetadata = await this.retrievePaymentInfo(session.id);
-
-          await this.handlePaymentSuccess(paymentInfowithMetadata);
+          await this.handlePaymentSuccess(event?.data?.object);
 
           break;
 
@@ -103,14 +98,13 @@ export class PaymentService {
         case 'checkout.session.async_payment_failed':
           // Handle failed checkout session event
           this.logger.error('Async payment failed');
-          const failedSession = event.data.object;
 
           // Perform actions to handle failed payment for the session
-          await this.handlePaymentFailure(failedSession);
+          await this.handlePaymentFailure(event?.data?.object);
           break;
 
         default:
-          console.log(`Unhandled event type: ${event.type}`);
+          this.logger.log(`Unhandled event type: ${event.type}`);
       }
 
       return { received: true };
@@ -127,7 +121,7 @@ export class PaymentService {
    * @return {Promise<any>} A Promise that resolves to the retrieved payment information
    */
   private async retrievePaymentInfo(sessionId: string) {
-    return await this.stripe.checkout.sessions.retrieve(sessionId);
+    return this.stripe.checkout.sessions.retrieve(sessionId);
   }
 
   /**
@@ -136,7 +130,9 @@ export class PaymentService {
    * @param {any} data - the payment data received
    * @return {Promise<void>} a promise that resolves when the payment success handling is complete
    */
-  private async handlePaymentSuccess(data: any): Promise<void> {
+  private async handlePaymentSuccess(eventObject: any): Promise<void> {
+    const data = await this.retrievePaymentInfo(eventObject.id);
+
     const session = await this.paymentModel.startSession();
     session.startTransaction();
 
@@ -178,7 +174,9 @@ export class PaymentService {
     }
   }
 
-  private async handlePaymentFailure(data: any): Promise<void> {
+  private async handlePaymentFailure(eventObject: any): Promise<void> {
+    const data = await this.retrievePaymentInfo(eventObject.id);
+
     const session = await this.paymentModel.startSession();
     session.startTransaction();
 
