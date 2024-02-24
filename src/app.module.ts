@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PaymentModule } from './payment/payment.module';
 import { StripeModule } from './stripe/stripe.module';
+import { LoggerModule } from './logger/logger.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { StripeModule } from './stripe/stripe.module';
     AuthModule,
     StripeModule,
     PaymentModule,
+    LoggerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
