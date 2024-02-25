@@ -40,7 +40,7 @@ const transports = [
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: `*${level.toUpperCase()}*:\n*Error* in ${context}:\n*Message:* ${message}\n*Method:* ${method}\n*Path:* ${path}\n*Error Name:* ${errorName}\n*Status:* ${statusCode}\n*Cause:* ${cause}`,
+              text: `*${level.toUpperCase()}*:\n*Error* in ${context}:\n*Message:* ${message}\n*Method:* ${method}\n*Path:* ${path}\n*Error Name:* ${errorName}\n*Status:* ${statusCode}\n*Cause*: ${cause}`,
             },
           },
         ],
