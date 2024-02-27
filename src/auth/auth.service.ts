@@ -55,7 +55,7 @@ export class AuthService {
 
       // Check if user exists and compare passwords
       const isValid = await this.utilityService.comparePassword(loginUserDTO.password, user?.password || '');
-      if ( !user ||!isValid) {
+      if (!user || !isValid) {
         throw new UnauthorizedException('Invalid email or password');
       }
 
