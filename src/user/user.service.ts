@@ -43,8 +43,7 @@ export class UserService {
    */
   async findUserByEmail(email: string): Promise<User | null> {
     return this.userModel.findOne({ email }).exec();
-}
-
+  }
 
   /**
    * Finds a user by phone number.
@@ -121,7 +120,7 @@ export class UserService {
         throw new UserUpdateError('An error occurred while updating the user', HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
-}
+  }
 
   /**
    * Updates the user status and adds a payment to the user's list of payments.

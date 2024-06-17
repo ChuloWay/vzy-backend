@@ -4,8 +4,6 @@ import { hash } from 'bcrypt';
 import { Payment } from 'src/payment/schemas/payment.schema';
 import { UserStatus } from '../enum/enum.index';
 
-
-
 export type UserDocument = HydratedDocument<User>;
 
 @Schema()
